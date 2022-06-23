@@ -154,6 +154,7 @@ void mlir::torch::Torch::createTorchFunctionToTorchBackendPipeline(
     // only-used-in-training operations on `torch.global_slot`'s.
     pm.addNestedPass<func::FuncOp>(createCanonicalizerPass());
   }
+  createTorchShapeRefinementPipeline(pm, options);
   
   if (options.decompose)
     pm.addNestedPass<func::FuncOp>(Torch::createDecomposeComplexOpsPass());
