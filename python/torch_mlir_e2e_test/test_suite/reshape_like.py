@@ -561,3 +561,22 @@ class ReshapeAliasCollapseModule(torch.nn.Module):
 @register_test_case(module_factory=lambda: ReshapeAliasCollapseModule())
 def ReshapeAliasCollapseModule_basic(module, tu: TestUtils):
     module.forward(tu.rand(2, 4))
+
+# ==============================================================================
+
+class ViewExpandCollapseDynamicDimModule(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    @export
+    @annotate_args([
+        None,
+        ([-1, 16, 128], torch.float32, True),
+    ])
+
+    def forward(self, a):
+        return a.view(16, 1, -1)
+
+@register_test_case(module_factory=lambda: ViewExpandCollapseDynamicDimModule())
+def ViewExpandCollapseDynamicDimModule_basic(module, tu: TestUtils):
+    module.forward(tu.rand(1, 16, 128))

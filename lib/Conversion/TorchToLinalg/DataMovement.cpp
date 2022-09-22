@@ -350,6 +350,23 @@ public:
       }
     }
 
+    if (llvm::count(outputShape, kUnknownSize) == 1 &&
+        llvm::count(inputShape, kUnknownSize) == 1) {
+      SmallVector<ReassociationIndices> inputAssociations;
+      SmallVector<ReassociationIndices> outputAssociations;
+      inputAssociations.emplace_back();
+      outputAssociations.emplace_back();
+      for (int i = 0; i < inputRank; i++)
+        inputAssociations.back().push_back(i);
+      for (int i = 0; i < resultRank; i++)
+        outputAssociations.back().push_back(i);
+      Value collapsedTensor = rewriter.create<tensor::CollapseShapeOp>(
+          op->getLoc(), input, inputAssociations);
+      rewriter.replaceOpWithNewOp<tensor::ExpandShapeOp>(
+          op, resultType, collapsedTensor, outputAssociations);
+      return success();
+    }
+
     // Mark the end of the input/output shapes
     unchangedDims.emplace_back();
     unchangedDims.back().push_back(inputRank);
