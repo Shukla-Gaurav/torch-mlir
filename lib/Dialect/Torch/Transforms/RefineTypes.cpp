@@ -487,6 +487,8 @@ private:
                            ArrayRef<const ValueState *> operands);
   void visitAtenScalarImplicitOp(AtenScalarImplicitOp op,
                                  ArrayRef<const ValueState *> operands);
+  void visitAtenIntImplicitOp(AtenIntImplicitOp op,
+                                 ArrayRef<const ValueState *> operands);
   void visitAtenEmbeddingBagOp(Operation *op);
 };
 } // namespace
@@ -1146,6 +1148,10 @@ void TypeAnalysis::visitOperation(Operation *op,
     visitAtenScalarImplicitOp(scalarImplicit, operands);
     return;
   }
+  if (auto intImplicit = dyn_cast<AtenIntImplicitOp>(op)) {
+    visitAtenIntImplicitOp(intImplicit, operands);
+    return;
+  }
 
   if (auto vectorNorm = dyn_cast<AtenLinalgVectorNormOp>(op)) {
     Type defaultDtype = operands[0]->getValue().dtype;
@@ -1457,6 +1463,14 @@ void TypeAnalysis::visitAtenScalarImplicitOp(
     knowledge.setScalarType(Torch::FloatType::get(op->getContext()));
   else if (dType.isa<mlir::IntegerType>())
     knowledge.setScalarType(Torch::IntType::get(op->getContext()));
+  incorporateKnowledge(op->getResult(0), knowledge);
+}
+
+void TypeAnalysis::visitAtenIntImplicitOp(
+    AtenIntImplicitOp op, ArrayRef<const ValueState *> operands) {
+  auto knowledge =
+      ValueKnowledge::getScalarPessimisticValueState(op.getContext());
+  knowledge.setScalarType(Torch::IntType::get(op->getContext()));
   incorporateKnowledge(op->getResult(0), knowledge);
 }
 
